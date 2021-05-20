@@ -23,10 +23,10 @@ export default {
 		json: {
 			coords: {
 				1: '100;100',
-				2: '400;400',
 				3: '400;100',
+				2: '400;400',
 				4: '100;400'
-			}
+			},
 			// coords: {
 			// 	1: '10;10',
 			// 	2: '25;13',
@@ -36,23 +36,38 @@ export default {
 		},
 		lines: 3,
 		points: 2,
-		coordsLine: {}
+		coordsLine: {},
+		convertedCoords: []
 	}),
 	methods: {
+		convertCoords() {
+			return Object.entries(this.json.coords)
+				.map(curr => {
+					const [, value ] = curr;
+					return value.split(';').map(s => +s)
+				})
+		},
+		getMaxCoord() {
+			this.convertedCoords = this.convertCoords()
+			console.log(this.convertedCoords)
+			return Math.max(...this.convertedCoords.flat())
+		},
 		parseCoords() {
 			return Object.entries(this.json.coords)
 				.reduce((acc, curr) => {
 					const [ dot, value ] = curr
 					const [ x, y ] = value.split(';')
 
-					acc[dot] = { x: +x, y: +y }
+					acc[dot] = {
+						x: 500 / this.getMaxCoord() * +x,
+						y: 500 / this.getMaxCoord() * +y
+					}
 
 					return acc
 				}, {})
 		},
 		getLines() {
 			const coords = this.parseCoords()
-			// console.log('coor: ', Object.entries(coords).map(c => Object.values(c[1])))
 
 			for (let i = 0; i < this.lines; i++) {
 				this.coordsLine[i + 1] = []
@@ -60,16 +75,29 @@ export default {
 					this.coordsLine[i + 1].push(coords[i + j + 1])
 				}
 			}
+
+			console.log(this.coordsLine)
 		},
 		drow([f, s]) {
+			console.log(f, s)
+
 			return {
-				'clip-path': `polygon(
-					calc(${f.x}px - 1px) calc(${f.y}px + 1px),
-					calc(${f.x}px + 1px) calc(${f.y}px + 1px),
-					calc(${s.x}px + 1px) calc(${s.y}px + 1px),
-					calc(${s.x}px - 1px) calc(${s.y}px + 1px)
-				)`,
-			}
+						'clip-path': `polygon(
+							calc(${f.x - 1}px) calc(${f.y >= f.x ? f.y + 1 : f.y - 1 }px),
+							calc(${f.x + 1}px) calc(${f.y < f.x ? f.y + 1 : f.y - 1 }px),
+							calc(${s.x + 1}px) calc(${s.y <= f.x ? s.y + 1 : s.y - 1 }px),
+							calc(${s.x - 1}px) calc(${s.y > f.x ? s.y + 1 : s.y - 1 }px)
+						)`,
+					}
+			
+			// {
+			// 			'clip-path': `polygon(
+			// 				calc(${f.x}px - 1px) calc(${f.y}px + 1px),
+			// 				calc(${f.x}px + 1px) calc(${f.y}px + 1px),
+			// 				calc(${s.x}px + 1px) calc(${s.y}px + 1px),
+			// 				calc(${s.x}px - 1px) calc(${s.y}px + 1px)
+			// 			)`,
+			// 		}
 		}
 	},
 	created() {
@@ -94,8 +122,8 @@ export default {
 		}
 	}
 	.chart {
-		width: 500px;
-		height: 500px;
+		width: 550px;
+		height: 550px;
 		border: 1px solid red;
 		position: relative;
 
