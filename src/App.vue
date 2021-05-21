@@ -47,20 +47,25 @@ export default {
 					return value.split(';').map(s => +s)
 				})
 		},
-		getMaxCoord() {
-			this.convertedCoords = this.convertCoords()
-			console.log(this.convertedCoords)
-			return Math.max(...this.convertedCoords.flat())
-		},
+		// getMaxCoord() {
+		// 	this.convertedCoords = this.convertCoords()
+		// 	console.log(this.convertedCoords)
+		// 	return Math.max(...this.convertedCoords.flat())
+		// },
 		parseCoords() {
 			return Object.entries(this.json.coords)
 				.reduce((acc, curr) => {
 					const [ dot, value ] = curr
 					const [ x, y ] = value.split(';')
 
+					// acc[dot] = {
+					// 	x: 500 / this.getMaxCoord() * +x,
+					// 	y: 500 / this.getMaxCoord() * +y
+					// }
+
 					acc[dot] = {
-						x: 500 / this.getMaxCoord() * +x,
-						y: 500 / this.getMaxCoord() * +y
+						x: +x,
+						y: +y
 					}
 
 					return acc
@@ -78,26 +83,29 @@ export default {
 
 			console.log(this.coordsLine)
 		},
-		drow([f, s]) {
-			console.log(f, s)
+		drow([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
+			console.log('v', x1, y1, x2, y2)
+			// const deg = y2 - y1 / x2 - x1
+			// console.log(Math.atan(deg))
 
-			return {
-						'clip-path': `polygon(
-							calc(${f.x - 1}px) calc(${f.y >= f.x ? f.y + 1 : f.y - 1 }px),
-							calc(${f.x + 1}px) calc(${f.y < f.x ? f.y + 1 : f.y - 1 }px),
-							calc(${s.x + 1}px) calc(${s.y <= f.x ? s.y + 1 : s.y - 1 }px),
-							calc(${s.x - 1}px) calc(${s.y > f.x ? s.y + 1 : s.y - 1 }px)
-						)`,
-					}
-			
-			// {
+			// return {
 			// 			'clip-path': `polygon(
-			// 				calc(${f.x}px - 1px) calc(${f.y}px + 1px),
-			// 				calc(${f.x}px + 1px) calc(${f.y}px + 1px),
-			// 				calc(${s.x}px + 1px) calc(${s.y}px + 1px),
-			// 				calc(${s.x}px - 1px) calc(${s.y}px + 1px)
+			// 				calc(${f.x - 1}px) calc(${f.y >= f.x ? f.y + 1 : f.y - 1 }px),
+			// 				calc(${f.x + 1}px) calc(${f.y < f.x ? f.y + 1 : f.y - 1 }px),
+			// 				calc(${s.x + 1}px) calc(${s.y <= f.x ? s.y + 1 : s.y - 1 }px),
+			// 				calc(${s.x - 1}px) calc(${s.y > f.x ? s.y + 1 : s.y - 1 }px)
 			// 			)`,
 			// 		}
+			
+			// const deg = 
+			return {
+						'clip-path': `polygon(
+							calc(${x1 - 2}px) calc(${y1 + 2}px),
+							calc(${x1 + 2}px) calc(${y1 - 2}px),
+							calc(${x2 + 2}px) calc(${y2 - 2}px),
+							calc(${x2 - 2}px) calc(${y2 + 2}px)
+						)`,
+					}
 		}
 	},
 	created() {
