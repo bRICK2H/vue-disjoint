@@ -5,7 +5,7 @@
 				<div class="chart__list chart__list">
 					<span class="chart__item chart__item"
 						v-for="(value, key) in coordsLine" :key="key"
-						:style="drow(value)"
+						:style="draw(value)"
 					>
 					</span>
 				</div>
@@ -50,7 +50,6 @@ export default {
 		},
 		getMinMaxCoord(param = 'max') {
 			this.convertedCoords = this.convertCoords()
-			console.log(this.convertedCoords)
 			return param === 'max'
 				? Math.max(...this.convertedCoords.flat())
 				: Math.min(...this.convertedCoords.flat())
@@ -78,10 +77,8 @@ export default {
 					this.coordsLine[i + 1].push(coords[i + j + 1])
 				}
 			}
-
-			console.log(this.coordsLine)
 		},
-		drow([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
+		draw([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
 			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
 			const sin = +Math.sin(deg * Math.PI / 180).toFixed(2)
 			const isNegative = /-/.test(String(deg))
@@ -135,7 +132,6 @@ export default {
 	created() {
 		this.getLines()
 		const res = (this.getMinMaxCoord('max') - this.getMinMaxCoord('min')) / 500
-		console.log({res})
 		this.res = res
 	}
 }
