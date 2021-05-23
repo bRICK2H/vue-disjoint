@@ -22,9 +22,9 @@ export default {
 	data: () => ({
 		json: {
 			coords: {
-				1: '100;100',
-				3: '400;100',
+				1: '100;377',
 				2: '400;400',
+				3: '400;100',
 				4: '100;400'
 			},
 			// coords: {
@@ -37,7 +37,8 @@ export default {
 		lines: 3,
 		points: 2,
 		coordsLine: {},
-		convertedCoords: []
+		convertedCoords: [],
+		res: 0,
 	}),
 	methods: {
 		convertCoords() {
@@ -47,25 +48,22 @@ export default {
 					return value.split(';').map(s => +s)
 				})
 		},
-		// getMaxCoord() {
-		// 	this.convertedCoords = this.convertCoords()
-		// 	console.log(this.convertedCoords)
-		// 	return Math.max(...this.convertedCoords.flat())
-		// },
+		getMinMaxCoord(param = 'max') {
+			this.convertedCoords = this.convertCoords()
+			console.log(this.convertedCoords)
+			return param === 'max'
+				? Math.max(...this.convertedCoords.flat())
+				: Math.min(...this.convertedCoords.flat())
+		},
 		parseCoords() {
 			return Object.entries(this.json.coords)
 				.reduce((acc, curr) => {
 					const [ dot, value ] = curr
 					const [ x, y ] = value.split(';')
 
-					// acc[dot] = {
-					// 	x: 500 / this.getMaxCoord() * +x,
-					// 	y: 500 / this.getMaxCoord() * +y
-					// }
-
 					acc[dot] = {
-						x: +x,
-						y: +y
+						x: (500 - 50) / this.getMinMaxCoord('max') * +x,
+						y: (500 - 50) / this.getMinMaxCoord('max') * +y
 					}
 
 					return acc
@@ -84,32 +82,61 @@ export default {
 			console.log(this.coordsLine)
 		},
 		drow([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
-			console.log('v', x1, y1, x2, y2)
-			// const deg = y2 - y1 / x2 - x1
-			// console.log(Math.atan(deg))
+			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
+			const sin = +Math.sin(deg * Math.PI / 180).toFixed(2)
+			const isNegative = /-/.test(String(deg))
+			let rx1, rx2, ry1, ry2 = 0
+			console.log('DEG: ', +deg, sin)
 
-			// return {
-			// 			'clip-path': `polygon(
-			// 				calc(${f.x - 1}px) calc(${f.y >= f.x ? f.y + 1 : f.y - 1 }px),
-			// 				calc(${f.x + 1}px) calc(${f.y < f.x ? f.y + 1 : f.y - 1 }px),
-			// 				calc(${s.x + 1}px) calc(${s.y <= f.x ? s.y + 1 : s.y - 1 }px),
-			// 				calc(${s.x - 1}px) calc(${s.y > f.x ? s.y + 1 : s.y - 1 }px)
-			// 			)`,
-			// 		}
-			
-			// const deg = 
-			return {
-						'clip-path': `polygon(
-							calc(${x1 - 2}px) calc(${y1 + 2}px),
-							calc(${x1 + 2}px) calc(${y1 - 2}px),
-							calc(${x2 + 2}px) calc(${y2 - 2}px),
-							calc(${x2 - 2}px) calc(${y2 + 2}px)
-						)`,
+			if (deg) {
+				rx1 = x1 + 2
+				rx2 = x2 + 2
+
+				if (isNegative) {
+					if (deg < -90) {
+						ry1 = y1 - 2
+						ry2 = y2 - 2
+					} else if (deg > -90) {
+						ry1 = y1 - 2
+						ry2 = y2 - 2
+					} else {
+						ry1 = y1
+						ry2 = y2
 					}
+				} else {
+					if (deg < 90) {
+						ry1 = y1 - 2
+						ry2 = y2 - 2
+					} else if (deg > 90) {
+						ry1 = y1 + 2
+						ry2 = y2 + 2
+					} else {
+						ry1 = y1
+						ry2 = y2
+					}
+				}
+			} else {
+				rx1 = x1
+				rx2 = x2
+				ry1 = y1 + 2
+				ry2 = y2 + 2
+			}
+
+			return {
+				'clip-path': `polygon(
+					calc(${x1}px) calc(${y1}px),
+					calc(${rx1}px) calc(${ry1}px),
+					calc(${rx2}px) calc(${ry2}px),
+					calc(${x2}px) calc(${y2}px)
+				)`,
+			}
 		}
 	},
 	created() {
 		this.getLines()
+		const res = (this.getMinMaxCoord('max') - this.getMinMaxCoord('min')) / 500
+		console.log({res})
+		this.res = res
 	}
 }
 </script>
@@ -130,8 +157,8 @@ export default {
 		}
 	}
 	.chart {
-		width: 550px;
-		height: 550px;
+		width: 500px;
+		height: 500px;
 		border: 1px solid red;
 		position: relative;
 
