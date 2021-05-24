@@ -7,7 +7,12 @@
 						v-for="(value, key) in coordsLine" :key="key"
 						:style="draw(value)"
 					>
-						<span class="chart__key">{{ key }}</span>
+					</span>
+					<span class="chart__key"
+						v-for="(coord, key) in scalableCoords" :key="`c${key}`"
+						:style="setCoords(coord)"
+					>
+						{{ key + 1}} ({{ unScalableCoords(key + 1) }})
 					</span>
 				</div>
 			</div>
@@ -39,6 +44,7 @@ export default {
 		points: 2,
 		coordsLine: {},
 		convertedCoords: [],
+		scalableCoords: [],
 		res: 0,
 	}),
 	methods: {
@@ -49,24 +55,23 @@ export default {
 					return value.split(';').map(s => +s)
 				})
 		},
-		getMinMaxCoord(param = 'max') {
-			this.convertedCoords = this.convertCoords()
-			return param === 'max'
-				? Math.max(...this.convertedCoords.flat())
-				: Math.min(...this.convertedCoords.flat())
+		getMaxCoord() {
+			return Math.max(...this.convertedCoords.flat())
+		},
+		setScaleCoords() {
+			return this.convertedCoords.map(curr => {
+				return curr.map(c => c * 500 / this.getMaxCoord())
+			})
+		},
+		unScalableCoords(key) {
+			return this.json.coords[key]
 		},
 		parseCoords() {
-			return Object.entries(this.json.coords)
-				.reduce((acc, curr) => {
-					const [ dot, value ] = curr
-					const [ x, y ] = value.split(';')
+			return this.scalableCoords.reduce((acc, curr, i) => {
+				const [ x, y ] = curr
+				acc[i + 1] = { x, y }
 
-					acc[dot] = {
-						x: (500 - 50) / this.getMinMaxCoord('max') * +x,
-						y: (500 - 50) / this.getMinMaxCoord('max') * +y
-					}
-
-					return acc
+				return acc
 				}, {})
 		},
 		getLines() {
@@ -157,12 +162,19 @@ export default {
 					calc(${x2}px) calc(${y2}px)
 				)`,
 			}
+		},
+		setCoords(coord) {
+			const [x, y] = coord
+			return {
+				left: `${x + 10}px`,
+				top: `${y - 10}px`
+			}
 		}
 	},
 	created() {
+		this.convertedCoords = this.convertCoords()
+		this.scalableCoords = this.setScaleCoords()
 		this.getLines()
-		const res = (this.getMinMaxCoord('max') - this.getMinMaxCoord('min')) / 500
-		this.res = res
 
 		this.intersect()
 	}
@@ -185,8 +197,8 @@ export default {
 		}
 	}
 	.chart {
-		width: 500px;
-		height: 500px;
+		width: 600px;
+		height: 600px;
 		border: 1px solid red;
 		position: relative;
 
@@ -203,12 +215,7 @@ export default {
 			background: green;
 		}
 		&__key {
-			width: 100px;
-			height: 100px;
-			border: 1px solid red;
 			position: absolute;
-			top: 0;
-			left: 0;
 		}
 	}
 </style>
