@@ -22,7 +22,7 @@ export default {
 	data: () => ({
 		json: {
 			coords: {
-				1: '100;377',
+				1: '100;100',
 				2: '400;400',
 				3: '350;100',
 				4: '50;400'
@@ -78,10 +78,38 @@ export default {
 				}
 			}
 		},
+		intersect() {
+			console.log('intersect', this.coordsLine)
+			const tmp = []
+			const res = Object.entries(this.coordsLine).reduce((acc, curr) => {
+				const [line, coords] = curr
+				const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = coords
+				tmp.push(coords)
+				console.log(line, x1, y1, x2, y2, tmp.slice(+line - 1))
+				acc.push(line)
+				return acc;
+			}, [])
+		},
 		draw([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
 			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
 			const sin = +Math.sin(deg * Math.PI / 180).toFixed(2)
 			const isNegative = /-/.test(String(deg))
+			// 1: '100;100', x1, y1
+			// 2: '400;400', x2, y2
+			// 3: '350;100', x3, y3
+			// 4: '50;400'  x4, y4
+
+			// x:=((x1 * y2 - x2 * y1) * (x4 - x3) - (x3 * y4 - x4 * y3) * (x2 - x1)) / ((y1 - y2) * (x4 - x3) - (y3 - y4) * (x2 - x1));
+			const testX = ((200 * 400 - 400 * 377) * (50 - 350) - (350 * 400 - 50 * 100) * (400 - 200)) / ((377 - 400) * (50 - 350) - (100 - 400) * (400 - 200))
+			// y:=((y3 - y4) * x - (x3 * y4 - x4 * y3)) / (x4 - x3);
+			const testY = ((100 - 400) * testX - (350 * 400 - 50 * 100)) / (50 - 350)
+			// (((x1 <= x) and (x2 >= x) and (x3 <= x) and (x4 >= x)) or ((y1 <= y) and (y2 >= y) and (y3 <= y) and(y4 >= y)))
+			const cond = (((200 <= testX) && (400 >= testX) && (350 <= testX) && (50 >= testX)) || ((377 <= testY) && (400 >= testY) && (100 <= testY) && (400 >= testY)))
+			// k1:= (x2 - x1) / (y2 - y1);
+			const testK1 = (400 - 200) / (400 - 377)
+			// k2:= (x4 - x3) / (y4 - y3);
+			const testK2 = (50 - 350) / (400 - 100)
+			console.log(testX, testY, cond, testK1 === testK2)
 			let rx1, rx2, ry1, ry2 = 0
 			console.log('DEG: ', +deg, sin)
 
@@ -133,6 +161,8 @@ export default {
 		this.getLines()
 		const res = (this.getMinMaxCoord('max') - this.getMinMaxCoord('min')) / 500
 		this.res = res
+
+		this.intersect()
 	}
 }
 </script>
