@@ -2,11 +2,12 @@
 	<div id="app">
 		<div class="container">
 			<div class="chart container__chart">
-				<div class="chart__list chart__list">
-					<span class="chart__item chart__item"
+				<div class="chart__list">
+					<span class="chart__item"
 						v-for="(value, key) in coordsLine" :key="key"
 						:style="draw(value)"
 					>
+						<span class="chart__key">{{ key }}</span>
 					</span>
 				</div>
 			</div>
@@ -24,8 +25,8 @@ export default {
 			coords: {
 				1: '100;100',
 				2: '400;400',
-				3: '350;100',
-				4: '50;400'
+				3: '400;100',
+				4: '100;400'
 			},
 			// coords: {
 			// 	1: '10;10',
@@ -80,36 +81,36 @@ export default {
 		},
 		intersect() {
 			console.log('intersect', this.coordsLine)
-			const tmp = []
+			const restValues = oLine => Object.entries(this.coordsLine).filter(curr => +curr[0] !== +oLine)
 			const res = Object.entries(this.coordsLine).reduce((acc, curr) => {
-				const [line, coords] = curr
-				const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = coords
-				tmp.push(coords)
-				console.log(line, x1, y1, x2, y2, tmp.slice(+line - 1))
-				acc.push(line)
+				const [line, [{ x: x1, y: y1 }, { x: x2, y: y2 }]] = curr
+				const isIntersect = restValues(+line).some(c => {
+					const [, [{ x: x3, y: y3 }, { x: x4, y: y4 }]] = c,
+						v1 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3),
+						v2 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3),
+						v3 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1),
+						v4 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1)
+
+					return (v1 * v2 < 0) && (v3 * v4 < 0);
+				})
+
+				console.log({isIntersect}, +line)
+
+				acc.push({
+					res: isIntersect,
+					line: +line
+				})
+
 				return acc;
 			}, [])
+
+			console.log({res})
 		},
 		draw([{ x: x1, y: y1 }, { x: x2, y: y2 }]) {
 			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
 			const sin = +Math.sin(deg * Math.PI / 180).toFixed(2)
 			const isNegative = /-/.test(String(deg))
-			// 1: '100;100', x1, y1
-			// 2: '400;400', x2, y2
-			// 3: '350;100', x3, y3
-			// 4: '50;400'  x4, y4
 
-			// x:=((x1 * y2 - x2 * y1) * (x4 - x3) - (x3 * y4 - x4 * y3) * (x2 - x1)) / ((y1 - y2) * (x4 - x3) - (y3 - y4) * (x2 - x1));
-			const testX = ((200 * 400 - 400 * 377) * (50 - 350) - (350 * 400 - 50 * 100) * (400 - 200)) / ((377 - 400) * (50 - 350) - (100 - 400) * (400 - 200))
-			// y:=((y3 - y4) * x - (x3 * y4 - x4 * y3)) / (x4 - x3);
-			const testY = ((100 - 400) * testX - (350 * 400 - 50 * 100)) / (50 - 350)
-			// (((x1 <= x) and (x2 >= x) and (x3 <= x) and (x4 >= x)) or ((y1 <= y) and (y2 >= y) and (y3 <= y) and(y4 >= y)))
-			const cond = (((200 <= testX) && (400 >= testX) && (350 <= testX) && (50 >= testX)) || ((377 <= testY) && (400 >= testY) && (100 <= testY) && (400 >= testY)))
-			// k1:= (x2 - x1) / (y2 - y1);
-			const testK1 = (400 - 200) / (400 - 377)
-			// k2:= (x4 - x3) / (y4 - y3);
-			const testK2 = (50 - 350) / (400 - 100)
-			console.log(testX, testY, cond, testK1 === testK2)
 			let rx1, rx2, ry1, ry2 = 0
 			console.log('DEG: ', +deg, sin)
 
@@ -119,6 +120,7 @@ export default {
 
 				if (isNegative) {
 					if (deg < -90) {
+						console.log('x')
 						ry1 = y1 - 2
 						ry2 = y2 - 2
 					} else if (deg > -90) {
@@ -199,6 +201,14 @@ export default {
 			position: absolute;
 			display: inline-block;
 			background: green;
+		}
+		&__key {
+			width: 100px;
+			height: 100px;
+			border: 1px solid red;
+			position: absolute;
+			top: 0;
+			left: 0;
 		}
 	}
 </style>
