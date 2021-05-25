@@ -31,7 +31,6 @@ export default {
 
 				if (isNegative) {
 					if (deg < -90) {
-						console.log('x')
 						ry1 = y1 - 2
 						ry2 = y2 - 2
 					} else if (deg > -90) {

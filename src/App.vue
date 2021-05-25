@@ -3,11 +3,11 @@
 		<div class="container">
 			<div class="chart container__chart">
 				<c-segment
-					v-for="(segments, key) in coordLines" :key="`cl${key}`"
+					v-for="(segments, key) in getSegments" :key="`cl${key}`"
 					:segments="segments"
 				/>
 				<c-point
-					v-for="(points, key) in formatedScalableCoords" :key="`scp${key}`"
+					v-for="(points, key) in formatScalableCoords" :key="`scp${key}`"
 					:primaryCoords="primaryCoords"
 					:points="points"
 					:nPoint="key"
@@ -35,39 +35,39 @@ export default {
 			4: '100;400',
 		},
 		// primaryCoords: {
+			// 1: '150;450',
+			// 2: '900;400',
+			// 3: '400;500',
+			// 4: '200;400',
+		// },
+		// primaryCoords: {
 		// 	1: '10;10',
 		// 	2: '25;13',
 		// 	3: '7;12',
 		// 	4: '15;15'
 		// },
 		points: 2,
-		coordLines: {},
-		convertedCoords: [],
-		formatedScalableCoords: [],
-		res: 0,
 	}),
-	methods: {
+	computed: {
 		convertCoords() {
 			return Object.entries(this.primaryCoords)
 				.map(curr => {
 					const [, value ] = curr;
-					return value.split(';').map(s => +s)
+					return value.split(';').map(pt => +pt)
 				})
 		},
 		getMaxCoord() {
-			return Math.max(...this.convertedCoords.flat())
+			return Math.max(...this.convertCoords.flat())
 		},
 		scalableCoords() {
-			return this.convertedCoords.map(curr => {
-				return this.convertedCoords.length > 1
-					? curr.map(c => c * 500 / this.getMaxCoord())
+			return this.convertCoords.map(curr => {
+				return this.convertCoords.length > 1
+					? curr.map(c => c * 500 / this.getMaxCoord)
 					: curr.map(c => c)
 			})
 		},
 		formatScalableCoords() {
-			const scalableCoords = this.scalableCoords()
-
-			return scalableCoords.reduce((acc, curr, i) => {
+			return this.scalableCoords.reduce((acc, curr, i) => {
 				const [ x, y ] = curr
 				acc[i + 1] = { x, y }
 
@@ -75,23 +75,26 @@ export default {
 				}, {})
 		},
 		getSegments() {
-			const initLength = Object.keys(this.formatedScalableCoords).length
+			const result = {}
+			const initLength = Object.keys(this.formatScalableCoords).length
 			const amountSegments = initLength > 1 ? initLength - 1 : initLength
 
 			for (let i = 0; i < amountSegments; i++) {
-				this.coordLines[i + 1] = []
+				result[i + 1] = []
 				for (let j = 0; j < this.points; j++) {
-					this.coordLines[i + 1].push({
-						...this.formatedScalableCoords[i + j + 1],
+					result[i + 1].push({
+						...this.formatScalableCoords[i + j + 1],
 						point: i + j + 1
 					})
 				}
 			}
+			
+			return result
 		},
 		intersect() {
-			const restValues = oLine => Object.entries(this.coordLines).filter(curr => +curr[0] !== +oLine)
+			const restValues = oLine => Object.entries(this.getSegments).filter(curr => +curr[0] !== +oLine)
 
-			return Object.entries(this.coordLines).reduce((acc, curr) => {
+			return Object.entries(this.getSegments).reduce((acc, curr) => {
 				const [line, segments] = curr
 				const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = segments
 				const isIntersect = restValues(+line).some(c => {
@@ -105,37 +108,42 @@ export default {
 				})
 
 				acc.push({
-					res: isIntersect,
-					nSegment: +line,
-					segments
+					result: isIntersect,
+					points: segments.map(seg => seg.point) 
 				})
 
 				return acc;
 			}, [])
 		},
+	},
+	methods: {
 		changeSegments() {
-			const resultIntersect = this.intersect()
-			const isIntersect = !resultIntersect.every(curr => !curr.res)
+			const isIntersect = !this.intersect.every(curr => !curr.result)
 
 			if (!isIntersect) return
 			
-			console.log({resultIntersect}, isIntersect)
-			const res = resultIntersect.reduce((acc, curr) => {
-				const { res, nSegment, segments } = curr
-				if (res) {
-					const normalSegment = resultIntersect.find(s => !s.res)
-					console.log({normalSegment})
-				}
+			console.log({intersect: this.intersect}, isIntersect)
+			const res = this.intersect
+				.filter(curr => !curr.result)
+				.reduce((acc, curr) => {
+					const { points } = curr
+					const [p1, p2] = points
+					const r1 = this.primaryCoords[p2]
+					const r2 = this.primaryCoords[p1]
 
-				acc = 1
-				return acc
-			})
+					setTimeout(() => {
+						this.primaryCoords[p1] = r1
+						this.primaryCoords[p2] = r2
+					}, 1000)
+
+					acc.push(points)
+					return acc
+			}, [])
+
+			console.log(res)
 		}
 	},
 	created() {
-		this.convertedCoords = this.convertCoords()
-		this.formatedScalableCoords = this.formatScalableCoords()
-		this.getSegments()
 		this.changeSegments()
 	}
 }
