@@ -28,26 +28,27 @@ export default {
 		cPoint
 	},
 	data: () => ({
+		// primaryCoords: {
+		// 	1: '100;100',
+		// 	2: '400;400',
+		// 	3: '400;100',
+		// 	4: '100;400',
+		// 	5: '300;50',
+		// },
+		// primaryCoords: {
+		// 	1: '150;450',
+		// 	2: '900;400',
+		// 	3: '400;500',
+		// 	4: '200;400',
+		// },
 		primaryCoords: {
-			1: '100;100',
-			2: '400;400',
-			3: '400;100',
-			4: '100;400',
-			5: '100;400',
-			5: '300;50',
+			1: '10;10',
+			2: '25;13',
+			3: '7;12',
+			4: '15;15',
+			5: '15;5',
+			// 6: '8;15'
 		},
-		// primaryCoords: {
-			// 1: '150;450',
-			// 2: '900;400',
-			// 3: '400;500',
-			// 4: '200;400',
-		// },
-		// primaryCoords: {
-		// 	1: '10;10',
-		// 	2: '25;13',
-		// 	3: '7;12',
-		// 	4: '15;15'
-		// },
 		points: 2,
 	}),
 	computed: {
@@ -121,28 +122,58 @@ export default {
 	methods: {
 		changeSegments() {
 			const isIntersect = !this.intersect.every(curr => !curr.result)
-
 			if (!isIntersect) return
 			
-			console.log({intersect: this.intersect}, isIntersect)
-			const res = this.intersect
-				.filter(curr => !curr.result)
-				.reduce((acc, curr) => {
-					const { points } = curr
-					const [p1, p2] = points
-					const r1 = this.primaryCoords[p2]
-					const r2 = this.primaryCoords[p1]
+			const test = this.intersect
+				.filter(curr => curr.result)
+				.map(curr => curr.points)
+				.flat()
+				.reduce((acc, curr, i, arr) => {
+					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
+					if (isDouble) {
+						acc = curr
+					}
 
-					setTimeout(() => {
-						this.primaryCoords[p1] = r1
-						this.primaryCoords[p2] = r2
-					}, 1000)
-
-					acc.push(points)
 					return acc
-			}, [])
-
-			console.log(res)
+				}, false)
+			console.log({test})
+			if (test !== false) {
+				console.log('no test')
+				const fPoint = this.intersect
+					.filter(c => c.result && !c.points.includes(test))
+					.map(e => e.points[0])
+				console.log({fPoint})
+				// fPoint приходит массив, нужно как-то правильно обработать
+				const fd = this.primaryCoords[test]
+				const inter = this.primaryCoords[fPoint]
+				
+				setTimeout(() => {
+					this.primaryCoords[fPoint] = fd
+					this.primaryCoords[test] = inter
+					// this.changeSegments()
+				}, 1000)
+			} else {
+				console.log('is test')
+				const res = this.intersect
+					.filter(curr => !curr.result)
+					.reduce((acc, curr) => {
+						const { points } = curr
+						const [p1, p2] = points
+						const r1 = this.primaryCoords[p2]
+						const r2 = this.primaryCoords[p1]
+	
+						setTimeout(() => {
+							this.primaryCoords[p1] = r1
+							this.primaryCoords[p2] = r2
+						}, 1000)
+	
+						acc.push(points)
+						return acc
+				}, [])
+	
+				console.log(res)
+			}
+			
 		}
 	},
 	created() {
