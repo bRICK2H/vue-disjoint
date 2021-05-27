@@ -41,13 +41,21 @@ export default {
 		// 	3: '400;500',
 		// 	4: '200;400',
 		// },
+		// primaryCoords: {
+		// 	1: '10;10',
+		// 	2: '25;13',
+		// 	3: '7;12',
+		// 	4: '15;15',
+		// 	5: '15;5',
+		// 	6: '8;15'
+		// },
 		primaryCoords: {
-			1: '10;10',
-			2: '25;13',
+			1: '17;10',
+			2: '25;1',
 			3: '7;12',
 			4: '15;15',
 			5: '15;5',
-			// 6: '8;15'
+			6: '8;15'
 		},
 		points: 2,
 	}),
@@ -131,27 +139,41 @@ export default {
 				.reduce((acc, curr, i, arr) => {
 					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
 					if (isDouble) {
-						acc = curr
+						acc.push(curr)
 					}
 
 					return acc
-				}, false)
+				}, [])
 			console.log({test})
-			if (test !== false) {
-				console.log('no test')
+
+
+			if (test.length) {
+				console.log('no test', this.intersect, Array.from(new Set(test)))
 				const fPoint = this.intersect
 					.filter(c => c.result && !c.points.includes(test))
-					.map(e => e.points[0])
+					.map(e => e.points)
 				console.log({fPoint})
 				// fPoint приходит массив, нужно как-то правильно обработать
 				const fd = this.primaryCoords[test]
 				const inter = this.primaryCoords[fPoint]
 				
+				const f1 = this.primaryCoords[1]
+				const f2 = this.primaryCoords[2]
+				const f3 = this.primaryCoords[3]
+				const f4 = this.primaryCoords[4]
+				const f5 = this.primaryCoords[5]
+				const f6 = this.primaryCoords[6]
 				setTimeout(() => {
-					this.primaryCoords[fPoint] = fd
-					this.primaryCoords[test] = inter
-					// this.changeSegments()
-				}, 1000)
+					Array.from(new Set(test)).forEach((el) => {
+						this.primaryCoords[Array.from(new Set(test))[el]] = el + 1 !== undefined
+							? this.primaryCoords[el] = this.primaryCoords[el + 1]
+							: this.primaryCoords[el] = this.primaryCoords[1]
+					})
+
+					// this.primaryCoords[fPoint] = fd
+					// this.primaryCoords[test] = inter
+					this.changeSegments()
+				}, 500)
 			} else {
 				console.log('is test')
 				const res = this.intersect

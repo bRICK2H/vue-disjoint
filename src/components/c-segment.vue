@@ -26,27 +26,27 @@ export default {
 			let rx1, rx2, ry1, ry2 = 0
 
 			if (deg) {
-				rx1 = x1 + 2
-				rx2 = x2 + 2
+				rx1 = x1 - 1
+				rx2 = x2 - 1
 
 				if (isNegative) {
 					if (deg < -90) {
-						ry1 = y1 - 2
-						ry2 = y2 - 2
+						ry1 = y1 + 1
+						ry2 = y2 + 1
 					} else if (deg > -90) {
-						ry1 = y1 - 2
-						ry2 = y2 - 2
+						ry1 = y1 - 1
+						ry2 = y2 - 1
 					} else {
 						ry1 = y1
 						ry2 = y2
 					}
 				} else {
 					if (deg < 90) {
-						ry1 = y1 - 2
-						ry2 = y2 - 2
+						ry1 = y1 + 1
+						ry2 = y2 + 1
 					} else if (deg > 90) {
-						ry1 = y1 + 2
-						ry2 = y2 + 2
+						ry1 = y1 - 1
+						ry2 = y2 - 1
 					} else {
 						ry1 = y1
 						ry2 = y2
@@ -55,8 +55,8 @@ export default {
 			} else {
 				rx1 = x1
 				rx2 = x2
-				ry1 = y1 + 2
-				ry2 = y2 + 2
+				ry1 = y1 + 1
+				ry2 = y2 + 1
 			}
 
 			return {
