@@ -7,7 +7,10 @@
 					:segments="segments"
 				/>
 				<c-point
-					v-for="(points, key) in formatScalableCoords" :key="`scp${key}`"
+					v-for="(points, key, i) in formatScalableCoords" :key="`scp${key}`"
+					@fillingCoords="fillingCoords(points, i)"
+					:filling="filling"
+					:isEnd="isEnd"
 					:primaryCoords="primaryCoords"
 					:points="points"
 					:nPoint="key"
@@ -41,23 +44,26 @@ export default {
 		// 	3: '400;500',
 		// 	4: '200;400',
 		// },
-		// primaryCoords: {
-		// 	1: '10;10',
-		// 	2: '25;13',
-		// 	3: '7;12',
-		// 	4: '15;15',
-		// 	5: '15;5',
-		// 	6: '8;15'
-		// },
 		primaryCoords: {
-			1: '17;10',
-			2: '25;1',
+			1: '10;10',
+			2: '25;13',
 			3: '7;12',
 			4: '15;15',
 			5: '15;5',
 			6: '8;15'
 		},
+		// primaryCoords: {
+		// 	1: '17;10', // +
+		// 	2: '25;1', // +
+		// 	3: '7;12',
+		// 	4: '15;15', // + 
+		// 	5: '15;5', // +
+		// 	6: '8;15' // +
+		// },
+		clonePrimaryCoords: {},
+		filling: [],
 		points: 2,
+		isEnd: false,
 	}),
 	computed: {
 		convertCoords() {
@@ -128,11 +134,15 @@ export default {
 		},
 	},
 	methods: {
+		fillingCoords(point, i) {
+			console.log(i)
+			this.filling.push(JSON.stringify(point))
+		},
 		changeSegments() {
 			const isIntersect = !this.intersect.every(curr => !curr.result)
 			if (!isIntersect) return
 			
-			const test = this.intersect
+			let doublePoints = this.intersect
 				.filter(curr => curr.result)
 				.map(curr => curr.points)
 				.flat()
@@ -144,38 +154,26 @@ export default {
 
 					return acc
 				}, [])
-			console.log({test})
+			
+			const unique = Array.from(new Set(doublePoints))
+			console.log({unique})
 
 
-			if (test.length) {
-				console.log('no test', this.intersect, Array.from(new Set(test)))
-				const fPoint = this.intersect
-					.filter(c => c.result && !c.points.includes(test))
-					.map(e => e.points)
-				console.log({fPoint})
-				// fPoint приходит массив, нужно как-то правильно обработать
-				const fd = this.primaryCoords[test]
-				const inter = this.primaryCoords[fPoint]
-				
-				const f1 = this.primaryCoords[1]
-				const f2 = this.primaryCoords[2]
-				const f3 = this.primaryCoords[3]
-				const f4 = this.primaryCoords[4]
-				const f5 = this.primaryCoords[5]
-				const f6 = this.primaryCoords[6]
-				setTimeout(() => {
-					Array.from(new Set(test)).forEach((el) => {
-						this.primaryCoords[Array.from(new Set(test))[el]] = el + 1 !== undefined
-							? this.primaryCoords[el] = this.primaryCoords[el + 1]
-							: this.primaryCoords[el] = this.primaryCoords[1]
+			if (unique.length > 1) {
+				console.log('no unique', this.intersect, unique)
+
+				// setTimeout(() => {
+					unique.forEach((el) => {
+						this.primaryCoords[el] = this.primaryCoords[el + 1]
 					})
 
-					// this.primaryCoords[fPoint] = fd
-					// this.primaryCoords[test] = inter
 					this.changeSegments()
-				}, 500)
+					setTimeout(() => {
+						console.log('done1')
+					})
+				// }, 500)
 			} else {
-				console.log('is test')
+				console.log('is unique', unique)
 				const res = this.intersect
 					.filter(curr => !curr.result)
 					.reduce((acc, curr) => {
@@ -184,21 +182,32 @@ export default {
 						const r1 = this.primaryCoords[p2]
 						const r2 = this.primaryCoords[p1]
 	
-						setTimeout(() => {
+						// setTimeout(() => {
 							this.primaryCoords[p1] = r1
 							this.primaryCoords[p2] = r2
-						}, 1000)
+							this.primaryCoords[Object.keys(this.primaryCoords).length] = this.primaryCoords[1]
+						// }, 1000)
+						
 	
 						acc.push(points)
 						return acc
 				}, [])
 	
 				console.log(res)
+				setTimeout(() => {
+					console.log('done2')
+				})
 			}
+
+			setTimeout(() => {
+				this.isEnd = true
+				console.log('done3')
+			}, 1000)
 			
 		}
 	},
 	created() {
+		this.clonePrimaryCoords = Object.assign({}, this.primaryCoords)
 		this.changeSegments()
 	}
 }
