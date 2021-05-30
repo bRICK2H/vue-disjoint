@@ -16,7 +16,7 @@ export default {
 	data: () => ({}),
 	computed: {
 		draw() {
-			if (this.segments.includes(undefined)) return;
+			if (this.segments.includes(undefined) || this.segments.length === 1) return;
 
 			const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = this.segments
 			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)

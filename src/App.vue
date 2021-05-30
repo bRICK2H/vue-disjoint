@@ -1,16 +1,16 @@
 <template>
 	<div id="app">
 		<div class="container">
+			<button
+				@click="test4"
+			>Изменить отрезки</button>
 			<div class="chart container__chart">
 				<c-segment
 					v-for="(segments, key) in getSegments" :key="`cl${key}`"
 					:segments="segments"
 				/>
 				<c-point
-					v-for="(points, key, i) in formatScalableCoords" :key="`scp${key}`"
-					@fillingCoords="fillingCoords(points, i)"
-					:filling="filling"
-					:isEnd="isEnd"
+					v-for="(points, key) in formatScalableCoords" :key="`scp${key}`"
 					:primaryCoords="primaryCoords"
 					:points="points"
 					:nPoint="key"
@@ -33,25 +33,56 @@ export default {
 	data: () => ({
 		// primaryCoords: {
 		// 	1: '100;100',
-		// 	2: '400;400',
-		// 	3: '400;100',
-		// 	4: '100;400',
-		// 	5: '300;50',
+		// 	2: '600;500',
+		// 	3: '600;0',
+		// 	4: '100;600',
+		// 	5: '150;50',
+		// 	6: '90;150'
 		// },
+		// primaryCoords: {
+		// 	1: '10;10',
+		// 	2: '200;200',
+		// 	3: '200;100',
+		// 	4: '180;250',
+		// 	5: '180;99',
+		// 	6: '170;220',
+		// 	7: '150;10',
+		// 	8: '400;15',
+		// 	9: '15;250'
+		// },
+		// primaryCoords: {
+		// 	1: '10;10',
+		// 	2: '25;13',
+		// 	3: '7;12',
+		// 	4: '15;15',
+		// 	5: '30;10',
+		// 	6: '28;15',
+		// 	7: '29;12',
+		// 	8: '15;9',
+		// 	9: '6;18',
+		// 	10: '10;18'
+		// },
+		primaryCoords: {
+			1: '100;100',
+			2: '400;400',
+			3: '400;100',
+			4: '100;400',
+			5: '300;50',
+		},
 		// primaryCoords: {
 		// 	1: '150;450',
 		// 	2: '900;400',
 		// 	3: '400;500',
 		// 	4: '200;400',
 		// },
-		primaryCoords: {
-			1: '10;10',
-			2: '25;13',
-			3: '7;12',
-			4: '15;15',
-			5: '15;5',
-			6: '8;15'
-		},
+		// primaryCoords: { // -
+		// 	1: '10;10',
+		// 	2: '25;13',
+		// 	3: '7;12',
+		// 	4: '15;15',
+		// 	5: '15;5',
+		// 	6: '8;15'
+		// },
 		// primaryCoords: {
 		// 	1: '17;10', // +
 		// 	2: '25;1', // +
@@ -60,13 +91,16 @@ export default {
 		// 	5: '15;5', // +
 		// 	6: '8;15' // +
 		// },
-		clonePrimaryCoords: {},
-		filling: [],
 		points: 2,
-		isEnd: false,
+		counter: 0,
+		temp: '',
+		temp2: '',
+		prevDj: '',
+		prevUnique: '',
 	}),
 	computed: {
 		convertCoords() {
+			// console.log('primCoo', this.primaryCoords)
 			return Object.entries(this.primaryCoords)
 				.map(curr => {
 					const [, value ] = curr;
@@ -95,14 +129,12 @@ export default {
 			const result = {}
 			const initLength = Object.keys(this.formatScalableCoords).length
 			const amountSegments = initLength > 1 ? initLength - 1 : initLength
+			const points = Object.keys(this.formatScalableCoords).length === 1 ? 1 : this.points
 
 			for (let i = 0; i < amountSegments; i++) {
 				result[i + 1] = []
-				for (let j = 0; j < this.points; j++) {
-					result[i + 1].push({
-						...this.formatScalableCoords[i + j + 1],
-						point: i + j + 1
-					})
+				for (let j = 0; j < points; j++) {
+					result[i + 1].push({ ...this.formatScalableCoords[i + j + 1], point: i + j + 1 })
 				}
 			}
 			
@@ -134,81 +166,550 @@ export default {
 		},
 	},
 	methods: {
-		fillingCoords(point, i) {
-			console.log(i)
-			this.filling.push(JSON.stringify(point))
-		},
-		changeSegments() {
-			const isIntersect = !this.intersect.every(curr => !curr.result)
-			if (!isIntersect) return
-			
-			let doublePoints = this.intersect
-				.filter(curr => curr.result)
-				.map(curr => curr.points)
+
+		test4() {
+			if (Object.keys(this.primaryCoords).length <= 1) return
+
+			const getDisjoint = () => this.intersect.filter(f => !f.result).map(m => m.points)
+			const getInterseptions = () => this.intersect.filter(curr => curr.result).map(curr => curr.points)
+
+			getDisjoint().forEach(arr => {
+				const [p1, p2] = arr
+
+				if (getInterseptions().flat().includes(p1) && getInterseptions().flat().includes(p2)) {
+					console.log('RES', arr)
+					const [p1, p2] = arr,
+					cp1 = this.primaryCoords[p1],
+					cp2 = this.primaryCoords[p2]
+	
+	
+					// console.log({p1, p2})
+					this.primaryCoords[p1] = cp2
+					this.primaryCoords[p2] = cp1
+				}
+			})
+
+			console.log(getInterseptions(), getDisjoint())
+
+			const res = getDisjoint()
 				.flat()
 				.reduce((acc, curr, i, arr) => {
 					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
-					if (isDouble) {
-						acc.push(curr)
-					}
+					if (isDouble) acc.push(curr)
 
 					return acc
 				}, [])
 			
-			const unique = Array.from(new Set(doublePoints))
-			console.log({unique})
+			const uniqueDisjoint = Array.from(new Set(res))
 
-
-			if (unique.length > 1) {
-				console.log('no unique', this.intersect, unique)
-
-				// setTimeout(() => {
-					unique.forEach((el) => {
-						this.primaryCoords[el] = this.primaryCoords[el + 1]
-					})
-
-					this.changeSegments()
-					setTimeout(() => {
-						console.log('done1')
-					})
-				// }, 500)
-			} else {
-				console.log('is unique', unique)
-				const res = this.intersect
-					.filter(curr => !curr.result)
-					.reduce((acc, curr) => {
-						const { points } = curr
-						const [p1, p2] = points
-						const r1 = this.primaryCoords[p2]
-						const r2 = this.primaryCoords[p1]
+			console.log({uniqueDisjoint})
+			
+			if (uniqueDisjoint.length && this.prevUnique !== JSON.stringify(uniqueDisjoint)) {
+				const uniqueSegment = getDisjoint().reduce((acc, curr) => {
+					if (curr.includes(...uniqueDisjoint)) {
 	
-						// setTimeout(() => {
-							this.primaryCoords[p1] = r1
-							this.primaryCoords[p2] = r2
-							this.primaryCoords[Object.keys(this.primaryCoords).length] = this.primaryCoords[1]
-						// }, 1000)
-						
+						if (!acc[uniqueDisjoint]) {
+							acc[uniqueDisjoint] = []
+						}
 	
-						acc.push(points)
-						return acc
-				}, [])
+						acc[uniqueDisjoint].push(...curr.filter(c => !uniqueDisjoint.includes(c)))
+					}
 	
-				console.log(res)
-				setTimeout(() => {
-					console.log('done2')
+					return acc
+				}, {})
+
+				console.log({uniqueSegment})
+				Object.entries(uniqueSegment).forEach(curr => {
+					const [,[p1, p2]] = curr,
+					cp1 = this.primaryCoords[p1],
+					cp2 = this.primaryCoords[p2]
+
+					this.primaryCoords[p1] = cp2
+					this.primaryCoords[p2] = cp1
 				})
+
+				this.prevUnique = JSON.stringify(uniqueDisjoint)
+			} else {
+				console.log('no uniq')
+				const isAllintersections = this.intersect.every(curr => curr.result)
+				console.log(isAllintersections)
+				// const [[p1, p2]] = getInterseptions().splice(0, 2),
+				// 	cp1 = this.primaryCoords[p1],
+				// 	cp2 = this.primaryCoords[p2]
+
+
+				// this.primaryCoords[p1] = cp2
+				// this.primaryCoords[p2] = cp1
+				if (isAllintersections) {
+					const defineIntersections = this.intersect.filter(curr => curr.result).map(curr => curr.points)
+					const allowedIntersect = () => {
+						console.log('all inter')
+						const [[p1, p2]] = defineIntersections.splice(0, 2),
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+
+
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+					}
+
+				
+					allowedIntersect()
+					while(isAllintersections && defineIntersections.length) {
+						console.log('::', isAllintersections,  defineIntersections.length)
+						allowedIntersect()
+					}
+				} else {
+					getInterseptions().forEach(curr => {
+						const [p1, p2] = curr,
+								cp1 = this.primaryCoords[p1],
+								cp2 = this.primaryCoords[p2]
+	
+	
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+					})
+				}
+
 			}
 
-			setTimeout(() => {
-				this.isEnd = true
-				console.log('done3')
-			}, 1000)
 			
+			
+			const isDisjoint = this.intersect.every(curr => !curr.result)
+			console.log({isDisjoint}, this.intersect)
+			// return !isDisjoint ? this.test3() : false
+		},
+
+		test3() {
+			if (Object.keys(this.primaryCoords).length <= 1) return
+
+
+			const disjoint = this.intersect
+				.filter(f => !f.result)
+				.map(m => m.points)
+			console.log({disjoint}, this.intersect)
+
+			const intersections = this.intersect.every(curr => curr.result)
+			const inter = this.intersect.filter(curr => curr.result).map(curr => curr.points)
+			
+			console.log('INTER', inter, disjoint, intersections)
+			if(intersections) {
+				const allowedIntersect = () => {
+					console.log('all inter')
+					const [[p1, p2]] = inter.splice(0, 2),
+						cp1 = this.primaryCoords[p1],
+						cp2 = this.primaryCoords[p2]
+
+
+					this.primaryCoords[p1] = cp2
+					this.primaryCoords[p2] = cp1
+				}
+
+				console.log('::', intersections, inter)
+				while(intersections && inter.length) {
+					allowedIntersect()
+				}
+				// return intersections ? allowedIntersect() : false
+			} else if (JSON.stringify(disjoint) === this.prevDj) {
+				console.log('pizda vstali sbrasivaem vse', JSON.stringify(disjoint), this.prevDj)
+				this.test(3)
+				// const [[p1, p2]] = disjoint.splice(0, 2),
+				// 		cp1 = this.primaryCoords[p1],
+				// 		cp2 = this.primaryCoords[p2]
+
+
+				// this.primaryCoords[p1] = cp2
+				// this.primaryCoords[p2] = cp1
+			}
+
+			this.prevDj = JSON.stringify(disjoint)
+
+			
+			console.log('before исключение', inter.length)
+			if(inter.length) {
+				console.log('исключение')
+				if (JSON.stringify(disjoint) !== this.prevDj) {
+					const dj = this.intersect.filter(f => !f.result).map(m => m.points)
+					console.log('исключение if')
+					dj.forEach(arr => {
+						const [p1, p2] = arr
+						console.log({p1, p2})
+						if (inter.flat().includes(p1) && inter.flat().includes(p2)) {
+							console.log('RES', arr)
+							const [p1, p2] = arr,
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+			
+			
+							// console.log({p1, p2})
+							this.primaryCoords[p1] = cp2
+							this.primaryCoords[p2] = cp1
+						}
+					})
+
+					
+				} else {
+					disjoint.forEach(curr => {
+						const [p1, p2] = curr,
+								cp1 = this.primaryCoords[p1],
+								cp2 = this.primaryCoords[p2]
+
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+						console.log('if disjoint', disjoint, this.intersect.filter(curr => curr.result).map(curr => curr.points))
+					})
+
+					const res = disjoint.filter(arr => {
+						const [p1, p2] = arr
+						console.log({p1, p2})
+						return (inter.flat().includes(p1) && inter.flat().includes(p2))
+					})
+					
+					if (res.length === 1) {
+						console.log('исключение ELSE', res)
+						const [[p1, p2]] = res,
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+			
+			
+							// console.log({p1, p2})
+							this.primaryCoords[p1] = cp2
+							this.primaryCoords[p2] = cp1
+						this.test3()
+					}
+				}
+			}
+
+			const isDisjoint = this.intersect.every(curr => !curr.result)
+			console.log({isDisjoint}, this.intersect)
+			// return !isDisjoint ? this.test3() : false
+		},
+
+		test2() {
+			// Если определены 2 отрезка, завершаем работу
+			if (Object.keys(this.primaryCoords).length <= 1) return
+
+
+			const disjoint = this.intersect
+				.filter(f => !f.result)
+				.map(m => m.points)
+			const intersecting = this.intersect
+				.filter(c => c.result)
+				.map(c => c.points)
+				.flat()
+				.reduce((acc, curr, i, arr) => {
+					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
+					if (isDouble) acc.push(curr)
+
+					return acc
+				}, [])
+			const uniqueIntersections = Array.from(new Set(intersecting))
+			
+				
+			if (this.temp !== JSON.stringify(disjoint)) {
+				this.temp = JSON.stringify(disjoint)
+				disjoint.forEach(curr => {
+					const [p1, p2] = curr,
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+	
+	
+					// console.log({p1, p2})
+					this.primaryCoords[p1] = cp2
+					this.primaryCoords[p2] = cp1
+					console.log('if disjoint', disjoint, this.intersect.filter(curr => curr.result).map(curr => curr.points))
+				})
+
+				const inter = this.intersect.filter(curr => curr.result).map(curr => curr.points)
+				const dj = this.intersect.filter(f => !f.result).map(m => m.points)
+				console.log('INTER', inter, dj)
+				if(inter.length) {
+					dj.forEach(arr => {
+						const [p1, p2] = arr
+						console.log({p1, p2})
+						if (inter.flat().includes(p1) && inter.flat().includes(p2)) {
+							console.log('RES', arr)
+							const [p1, p2] = arr,
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+			
+			
+							// console.log({p1, p2})
+							this.primaryCoords[p1] = cp2
+							this.primaryCoords[p2] = cp1
+						}
+					})
+					
+				}
+			} else {
+				console.log('else')
+				const inter = this.intersect.filter(curr => curr.result).map(curr => curr.points)
+				
+				if (inter.length) {
+					console.log('inter', inter)
+					const res = inter.filter((arr, i) => {
+
+						return disjoint.some(curr => {
+							const [p1, p2] = curr
+							return arr.includes(p1) || arr.includes(p2)
+						})
+						
+					})
+					
+
+					console.log(this.temp2 === JSON.stringify(res), this.temp, disjoint)
+					this.temp2 = JSON.stringify(res)
+					if (res.length) {
+						res.forEach(curr => {
+							const [p1, p2] = curr,
+							cp1 = this.primaryCoords[p1],
+							cp2 = this.primaryCoords[p2]
+		
+							this.primaryCoords[p1] = cp2
+							this.primaryCoords[p2] = cp1
+						})
+					} else {
+						console.log(uniqueIntersections)
+						// uniqueIntersections.forEach(curr => {
+						// 	const [p1, p2] = uniqueIntersections.splice(0, 2),
+						// 	cp1 = this.primaryCoords[p1],
+						// 	cp2 = this.primaryCoords[p2]
+		
+						// 	this.primaryCoords[p1] = cp2
+						// 	this.primaryCoords[p2] = cp1
+
+						// 	if (uniqueIntersections.length === 1) {
+						// 		console.log('here', res, uniqueIntersections)
+						// 		const matchRest = inter.filter(curr => curr.includes(...uniqueIntersections))
+
+						// 		matchRest.forEach(curr => {
+						// 			const [p1, p2] = curr,
+						// 			cp1 = this.primaryCoords[p1],
+						// 			cp2 = this.primaryCoords[p2]
+				
+						// 			this.primaryCoords[p1] = cp2
+						// 			this.primaryCoords[p2] = cp1
+						// 		})
+						// 	}
+						// })
+					}
+				}
+
+			}
+
+				
+			// console.log(uniqueIntersections)
+
+			// }
+			
+			const isDisjoint = this.intersect.every(curr => !curr.result)
+			console.log({isDisjoint}, this.intersect)
+			// return !isDisjoint ? this.test2() : false
+			
+		},
+		
+		test() {
+			// Если определены 2 отрезка, завершаем работу
+			if (Object.keys(this.primaryCoords).length <= 1) return
+
+
+			const disjoint = this.intersect
+				.filter(f => !f.result)
+				.map(m => m.points)
+			const intersecting = this.intersect
+				.filter(c => c.result)
+				.map(c => c.points)
+				.flat()
+				.reduce((acc, curr, i, arr) => {
+					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
+					if (isDouble) acc.push(curr)
+
+					return acc
+				}, [])
+			const uniqueIntersections = Array.from(new Set(intersecting))
+
+
+			// console.log('start', 'disjoint', disjoint, intersecting, this.intersect)
+			
+				// const next = () => {
+				// 	const [[p1, p2]] = disjoint.splice(0, 2),
+				// 	cp1 = this.primaryCoords[p1],
+				// 	cp2 = this.primaryCoords[p2]
+
+				// 	this.primaryCoords[p1] = cp2
+				// 	this.primaryCoords[p2] = cp1
+				// }
+
+				// setTimeout(() => {
+				// 	if (this.intersect.some(curr => curr.result)) {
+				// 		console.log('next')
+				// 		next()
+				// 	}
+				// }, 1000)
+				
+			disjoint.forEach(curr => {
+				const [p1, p2] = curr,
+						cp1 = this.primaryCoords[p1],
+						cp2 = this.primaryCoords[p2]
+
+				console.log({p1, p2})
+				this.primaryCoords[p1] = cp2
+				this.primaryCoords[p2] = cp1
+			})
+
+			const inter = this.intersect.filter(curr => curr.result).map(curr => curr.points)
+			
+			if (inter.length) {
+				console.log('inter', inter)
+				const res = inter.filter((arr, i) => {
+
+					return disjoint.some(curr => {
+						const [p1, p2] = curr
+						return arr.includes(p1) || arr.includes(p2)
+					})
+					
+				})
+				
+				console.log({res})
+				if (res.length) {
+					res.forEach(curr => {
+						const [p1, p2] = curr,
+						cp1 = this.primaryCoords[p1],
+						cp2 = this.primaryCoords[p2]
+	
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+					})
+				} else {
+					console.log(uniqueIntersections)
+					uniqueIntersections.forEach(curr => {
+						const [p1, p2] = uniqueIntersections.splice(0, 2),
+						cp1 = this.primaryCoords[p1],
+						cp2 = this.primaryCoords[p2]
+	
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+
+						if (uniqueIntersections.length === 1) {
+							console.log('here', res, uniqueIntersections)
+							const matchRest = inter.filter(curr => curr.includes(...uniqueIntersections))
+
+							matchRest.forEach(curr => {
+								const [p1, p2] = curr,
+								cp1 = this.primaryCoords[p1],
+								cp2 = this.primaryCoords[p2]
+			
+								this.primaryCoords[p1] = cp2
+								this.primaryCoords[p2] = cp1
+							})
+						}
+					})
+				}
+
+				
+			console.log(uniqueIntersections)
+
+			}
+			
+			const isDisjoint = this.intersect.every(curr => !curr.result)
+			console.log({isDisjoint})
+			// return !isDisjoint ? this.test() : false
+			
+		},
+
+		
+		
+		changeSegments() {
+			if (Object.keys(this.primaryCoords).length <= 2) return
+			const clean = this.intersect.filter(f => !f.result).map(m => m.points)
+			const dbl = this.intersect
+				.filter(c => c.result)
+				.map(c => c.points)
+				.flat()
+				.reduce((acc, curr, i, arr) => {
+					const isDouble = arr.some((el, ii) => i !== ii && curr === el)
+					if (isDouble) acc.push(curr)
+
+					return acc
+				}, [])
+
+			const epicenter = Array.from(new Set(dbl))
+
+			if (clean.length) {
+
+				if (this.counter > 1 && this.counter !== null) {
+					console.log('pizda', this.intersect, this.counter)
+
+					if (epicenter.length) {
+						if (epicenter.length === 1) {
+							console.log('epic len = 1')
+						} else {
+							console.log('pizda > 1', epicenter)
+							if (epicenter.length) {
+								// setTimeout(() => {
+									const [p1, p2] = epicenter.splice(0, 2)
+									const cp1 = this.primaryCoords[p1]
+									const cp2 = this.primaryCoords[p2]
+									console.log(p1, p2, cp1, cp2)
+									this.primaryCoords[p1] = cp2
+									this.primaryCoords[p2] = cp1
+									this.counter = null
+									this.changeSegments()
+								// }, 1000)
+							}
+						}
+					} else {
+						console.log('epicenter []')
+					}
+				}
+
+				// setTimeout(() => {
+					console.log(this.intersect)
+	
+					clean.forEach(cl => {
+						const [p1, p2] = cl
+						const cp1 = this.primaryCoords[p1]
+						const cp2 = this.primaryCoords[p2]
+						console.log(cp1, cp2, '???')
+						this.primaryCoords[p1] = cp2
+						this.primaryCoords[p2] = cp1
+					})
+					
+					console.log('here')
+					const isIntersect = !this.intersect.every(curr => !curr.result)
+					console.log(isIntersect)
+					this.counter++
+					return isIntersect ? this.changeSegments() : false
+
+				// }, 1000)
+			} else {
+				console.log('empty')
+
+
+
+				if (epicenter.length === 1) {
+					console.log('epic len = 1')
+				} else {
+					let x = () => {
+						console.log('call x')
+						// setTimeout(() => {
+							epicenter.forEach(curr => {
+								const [p1, p2] = epicenter.splice(0, 2)
+								const cp1 = this.primaryCoords[p1]
+								const cp2 = this.primaryCoords[p2]
+								console.log(p1, p2)
+								this.primaryCoords[p1] = cp2
+								this.primaryCoords[p2] = cp1
+							})
+							
+							return this.intersect.map(curr => curr.result).includes(false) ? this.changeSegments() : x()
+						// }, 1000)
+					}
+
+					x()
+				}
+			}
 		}
-	},
-	created() {
-		this.clonePrimaryCoords = Object.assign({}, this.primaryCoords)
-		this.changeSegments()
 	}
 }
 </script>
@@ -235,6 +736,7 @@ export default {
 		width: 100%;
 		height: 100vh;
 		display: flex;
+		align-items: center;
 		
 		&__chart {
 			margin: auto;
