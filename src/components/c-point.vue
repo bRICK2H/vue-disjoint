@@ -2,7 +2,7 @@
 	<span class="point chart__point"
 		:style="setStyleNumberPoint"
 	>
-		{{ nPoint }} ({{ setStyleCoordPoints }})
+		{{ keyPoint }} ({{ setStyleCoordPoints }})
 	</span>
 </template>
 
@@ -14,18 +14,18 @@ export default {
 			type: Object,
 			default: () => ({})
 		},
-		points: {
+		point: {
 			type: Object,
 			default: () => ({})
 		},
-		nPoint: {
+		keyPoint: {
 			type: [Number, String],
 			default: 0
 		},
 	},
 	computed: {
 		setStyleNumberPoint() {
-			const {x, y} = this.points
+			const {x, y} = this.point
 
 			return {
 				left: `${x + 15}px`,
@@ -33,7 +33,7 @@ export default {
 			}
 		},
 		setStyleCoordPoints() {
-			return this.primaryCoords[this.nPoint]
+			return this.primaryCoords[this.keyPoint]
 		}
 	},
 }
