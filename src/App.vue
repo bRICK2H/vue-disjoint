@@ -2,7 +2,7 @@
 	<div id="app">
 		<div class="container">
 			<button
-				@click="test4"
+				@click="test5"
 			>Изменить отрезки</button>
 			<div class="chart container__chart">
 				<c-segment
@@ -67,7 +67,7 @@ export default {
 			2: '400;400',
 			3: '400;100',
 			4: '100;400',
-			5: '300;50',
+			// 5: '300;50',
 		},
 		// primaryCoords: {
 		// 	1: '150;450',
@@ -100,45 +100,45 @@ export default {
 	}),
 	computed: {
 		convertCoords() {
-			// console.log('primCoo', this.primaryCoords)
 			return Object.entries(this.primaryCoords)
 				.map(curr => {
-					const [, value ] = curr;
-					return value.split(';').map(pt => +pt)
+					const [point, value ] = curr;
+
+					return { [point]: value.split(';').map(pt => +pt) }
 				})
 		},
 		getMaxCoord() {
-			return Math.max(...this.convertCoords.flat())
+			const deployedCoords = this.convertCoords.map(curr => Object.values(curr).flat()).flat()
+			return Math.max(...deployedCoords)
 		},
 		scalableCoords() {
 			return this.convertCoords.map(curr => {
+				const [point, value] = Object.entries(curr).flat()
+
 				return this.convertCoords.length > 1
-					? curr.map(c => c * 500 / this.getMaxCoord)
-					: curr.map(c => c)
+					? { [point]: value.map(c => c * 500 / this.getMaxCoord) }
+					: { [point]: value.map(c => c) }
 			})
 		},
 		formatScalableCoords() {
 			return this.scalableCoords.reduce((acc, curr, i) => {
-				const [ x, y ] = curr
-				acc[i + 1] = { x, y }
+				const [point, [ x, y ]] = Object.entries(curr).flat()
+				acc[point] = { x, y }
 
 				return acc
 				}, {})
 		},
 		getSegments() {
-			const result = {}
-			const initLength = Object.keys(this.formatScalableCoords).length
-			const amountSegments = initLength > 1 ? initLength - 1 : initLength
-			const points = Object.keys(this.formatScalableCoords).length === 1 ? 1 : this.points
+			const res = {}
 
-			for (let i = 0; i < amountSegments; i++) {
-				result[i + 1] = []
-				for (let j = 0; j < points; j++) {
-					result[i + 1].push({ ...this.formatScalableCoords[i + j + 1], point: i + j + 1 })
-				}
+			for(let i = 0; i < Object.keys(this.formatScalableCoords).length; i++) {
+				const [point] = Object.entries(this.formatScalableCoords)[i]
+				const [[, points1], p2] = Object.entries(this.formatScalableCoords).slice(i, i + 2)
+
+				res[point] = [points1, p2 === undefined ? points1 : p2[1]]
 			}
-			
-			return result
+
+			return res
 		},
 		intersect() {
 			const restValues = oLine => Object.entries(this.getSegments).filter(curr => +curr[0] !== +oLine)
@@ -158,7 +158,8 @@ export default {
 
 				acc.push({
 					result: isIntersect,
-					points: segments.map(seg => seg.point) 
+					nPoint: line,
+					segments,
 				})
 
 				return acc;
@@ -166,6 +167,65 @@ export default {
 		},
 	},
 	methods: {
+
+		test5() {
+			if (Object.keys(this.primaryCoords).length <= 1) return
+			const modify = this.intersect.map((curr, i) => {
+				const { segments } = curr
+				console.log(segments)
+				const n_segments = segments.map(curr => {
+					const { x, y } = curr
+					return `${(this.getMaxCoord * x) / 500};${(this.getMaxCoord * y) / 500}`
+				})
+
+				// const x = n_segments.splice(i % 2 ? 1 : 0, 1)
+
+				return { ...curr, segments: n_segments }
+			})
+
+			console.log(modify)
+
+
+			const res = Object.entries(this.primaryCoords).reduce((acc, curr, i) => {
+				const [point, points] = curr
+				const xx = modify.filter(curr => curr.result).map(curr => curr.segments)
+				console.log(xx, points)
+				// if (!xx.includes(points)) {
+				// 	acc[point] = points
+				// }
+
+				return acc
+			}, {})	
+
+			console.log({res})
+
+			
+			// console.log(modify.filter(curr => curr.result), this.primaryCoords)
+			// const getDisjoint = () => this.intersect.filter(f => !f.result)
+			// const nPointsIntersections =  this.intersect.filter(curr => curr.result).map(curr => curr.nPoint)
+
+			// this.intersect.filter(curr => curr.result).reduce((acc, curr) => {
+			// 	acc = true
+			// 	return acc
+			// }, {})
+
+			// console.log(nPointsIntersections, this.intersect)
+			// const res = Object.entries(this.primaryCoords).reduce((acc, curr) => {
+			// 	const [nPoint, points] = curr
+			
+			// 	if (!nPointsIntersections.includes(nPoint)) {
+			// 		console.log(curr)
+			// 		acc[nPoint] = points
+			// 	} else {
+			// 		console.log('else', curr)
+			// 	}
+
+			// 	return acc
+			// }, {})
+
+			// console.log(res)
+			// this.primaryCoords = res
+		},
 
 		test4() {
 			if (Object.keys(this.primaryCoords).length <= 1) return
