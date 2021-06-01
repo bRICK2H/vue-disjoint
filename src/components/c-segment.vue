@@ -24,10 +24,18 @@ export default {
 	data: () => ({}),
 	computed: {
 		draw() {
-			let rx1, rx2, ry1, ry2 = 0
+			console.log(this.segment)
+			// let rx1, rx2, ry1, ry2 = 0
+			let rx1 = 0,
+			    rx2 = 0,
+				 ry1 = 0,
+				 ry2 = 0
 			const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = this.segment,
 					deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0),
+					sin = +Math.sin(deg * Math.PI / 180).toFixed(2),
 					isNegative = /-/.test(String(deg))
+
+			console.log(rx1, ry1, rx2, ry2)
 
 			if (deg) {
 				rx1 = x1 - 1

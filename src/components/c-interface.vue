@@ -1,33 +1,46 @@
 <template>
 	<div class="interface container__interface">
-		<button v-if="!isPrimary">Задать входные данные</button>
-
-		<div class="container-points" 
-			v-for="(points, key) of coords"
-			:key="key"
-			@input="inputValue($event, key)"
-			@click="updatePrevValue($event.target.value)"
+		<button v-if="!isCoords"
+			@click="addCoords"
+		>Задать входные данные</button>
+		<button v-if="isCoords"
+			@click="deleteField"
 		>
-			<span>{{ key }}</span>
-			<div class="box-points">
-				<span>x:</span>
-				<input class="input-point box-points__input-point"
-					type="text"
-					:value="points.x"
-					data-type="x"
-				>
-				<span>y:</span>
-				<input class="input-point box-points__input-point"
-					type="text"
-					:value="points.y"
-					data-type="y"
-				>
-				<button @click="deteleValue(key)">del</button>
+			Удалить все
+		</button>
+
+		<div class="container-points">
+			<div class="list-points" 
+				v-for="(points, key) of coords"
+				:key="key"
+				@input="inputValue($event, key)"
+				@click="updatePrevValue($event.target.value)"
+			>
+				<span>{{ key }}</span>
+				<div class="item-point">
+					<span>x:</span>
+					<input class="input-point item-point__input-point"
+						type="text"
+						:value="points.x"
+						data-type="x"
+					>
+					<span>y:</span>
+					<input class="input-point item-point__input-point"
+						type="text"
+						:value="points.y"
+						data-type="y"
+					>
+					<button @click="deteleValue(key)">del</button>
+				</div>
 			</div>
 		</div>
 
-		<!-- <template v-if="isPrimary"> -->
-			<button>Добавить точку</button>
+		<!-- <template v-if="isCoords"> -->
+			<button v-if="isCoords"
+				@click="addCoords"
+			>
+				Добавить точку
+			</button>
 			<button @click="updateValue">
 				Обработать
 			</button>
@@ -50,11 +63,17 @@ export default {
 		prevValue: null
 	}),
 	computed: {
-		isPrimary() {
-			return !!this.points.length
+		isCoords() {
+			return !!Object.keys(this.coords).length
 		}
 	},
 	methods: {
+		addCoords() {
+			const newKeyPoint = !!Object.keys(this.coords).length
+				? Math.max(...Object.keys(this.coords)) + 1 : 1
+				
+			this.$set(this.coords, newKeyPoint, { x: 0, y: 0 })
+		},
 		inputValue(e, point) {
 			const { target, target: { dataset: { type } } } = e
 
@@ -74,6 +93,9 @@ export default {
 		},
 		deteleValue(point) {
 			this.$delete(this.coords, point)
+		},
+		deleteField() {
+			this.coords = {}
 		},
 		contertValue(coords) {
 			return Object.entries(coords).reduce((acc, curr) => {
@@ -109,12 +131,17 @@ export default {
 		border: 1px solid red;
 	}
 
-	.container-points,
-	.box-points {
+	.container-points {
+		max-height: calc(100% - 10rem);
+		overflow-y: auto;
+	}
+
+	.list-points,
+	.item-point {
 		display: flex;
 		align-items: center;
 	}
-	.box-points {
+	.item-point {
 		justify-content: center;
 
 		&__input-point {
