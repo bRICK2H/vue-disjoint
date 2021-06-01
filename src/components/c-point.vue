@@ -2,7 +2,7 @@
 	<span class="point chart__point"
 		:style="setStyleNumberPoint"
 	>
-		{{ keyPoint }} ({{ setStyleCoordPoints }})
+		{{ keyPoint }} ({{ points }})
 	</span>
 </template>
 
@@ -10,10 +10,6 @@
 export default {
 	name: 'cPoint',
 	props: {
-		primaryCoords: {
-			type: Object,
-			default: () => ({})
-		},
 		point: {
 			type: Object,
 			default: () => ({})
@@ -22,20 +18,35 @@ export default {
 			type: [Number, String],
 			default: 0
 		},
+		max: {
+			type: Number,
+			default: 0
+		},
+		scale: {
+			type: Number,
+			default: 0
+		}
 	},
 	computed: {
 		setStyleNumberPoint() {
-			const {x, y} = this.point
+			const { x, y } = this.point
 
 			return {
-				left: `${x + 15}px`,
-				top: `${y - 15}px`
+				left: `${this.scalable(x) + 15}px`,
+				top: `${this.scalable(y) - 15}px`
 			}
 		},
-		setStyleCoordPoints() {
-			return this.primaryCoords[this.keyPoint]
+		points() {
+			const { x, y } = this.point
+
+			return `${x}, ${y}`
 		}
 	},
+	methods: {
+		scalable(point) {
+			return (point * this.scale) / this.max
+		}
+	}
 }
 </script>
 
@@ -46,6 +57,7 @@ export default {
 		}
 	}
 	.point {
+		transition: .5s;
 		font-size: 1.8rem
 	}
 </style>

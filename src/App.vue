@@ -1,19 +1,32 @@
 <template>
 	<div id="app">
 		<div class="container">
-			<button @click="createDisjoint">Изменить отрезки</button>
-			<div class="chart container__chart">
-				<c-segment v-for="(segment, key) in segments"
-					:key="`segment${key}`"
+			
+			<!-- Interface -->
+			<cInterface
+				:points="coords"
+				@create-disjoint="createDisjoint"
+			/>
+
+			<!-- Chart -->
+			<div class="chart container__chart"
+				:style="styleChart"
+			>
+				<c-segment v-for="(segment, i) in segments"
+					:key="`segment${i}`"
+					:max="maxPoint"
+					:scale="scale"
 					:segment="segment"
 				/>
-				<c-point v-for="(point, key) in points"
-					:key="`point${key}`"
-					:primaryCoords="primaryCoords"
+				<c-point v-for="(point, i) in points"
+					:key="`point${i}`"
+					:max="maxPoint"
+					:scale="scale"
 					:point="point"
-					:keyPoint="key"
+					:keyPoint="point.keyPoint"
 				/>
 			</div>
+
 		</div>
 	</div>
 </template>
@@ -21,130 +34,88 @@
 <script>
 	import cPoint from '@/components/c-point'
 	import cSegment from '@/components/c-segment'
+	import cInterface from '@/components/c-interface'
 
 	export default {
 		name: 'App',
 		components: {
+			cPoint,
 			cSegment,
-			cPoint
+			cInterface
 		},
 		data: () => ({
-			primaryCoords: {
-				1: '12;10',
-				2: '25;13',
-				3: '90;12',
-				4: '13;19',
-				5: '30;5',
-				6: '28;17',
-				7: '26;9',
-				8: '74;84',
-				9: '68;18',
-				10: '30;38',
-				11: '15;50',
-				12: '80;33',
-				13: '99;6',
-				14: '18;30',
-				15: '50;55',
-				16: '84;46',
-				17: '18;25',
-				18: '66;90',
-				19: '5;40',
-				20: '27;43'
-			},
+			coords: [],
+			scale: 0
 		}),
 		computed: {
-			convertCoords() {
-				return Object.entries(this.primaryCoords)
+			styleChart() {
+				return {
+					width: `${this.scale * 0.1}rem`,
+					height: `${this.scale * 0.1}rem`,
+				}
+			},
+			maxPoint() {
+				const deployedCoords = this.coords.map(curr => Object.values(curr).flat()).flat()
+				return Math.max(...deployedCoords)
+			},
+			points() {
+				return this.coords.reduce((acc, curr) => {
+					const [point, [x, y]] = Object.entries(curr).flat()
+					acc.push({ x, y, keyPoint: point })
+
+					return acc
+				}, [])
+			},
+			segments() {
+				return this.coords.reduce((acc, curr, i) => {
+					const segments = this.coords.slice(i, i + 2)
+					const modified = segments.map(curr => {
+						const [x, y] = Object.values(curr).flat()
+						return { x, y }
+					})
+					const [p1, p2] = modified
+
+					if (!acc.length) acc = []
+					acc.push(p2 === undefined ? [p1, p1] : modified)
+
+					return acc
+				}, [])
+			},
+		},
+		methods: {
+			createDisjoint(points) {
+				this.coords = Object
+					.entries(points)
+					.map(curr => {
+						const [, o] = curr
+						return { point: +Object.keys(o)[0], points: Object.values(o).flat() }
+					})
+					.sort(({ points: [x1, y1] }, { points: [x2, y2] }) => {
+						return x1 - x2 || y1 - y2
+					})
+					.reduce((acc, curr) => {
+						const { point, points } = curr
+						acc.push({ [point]: points })
+
+						return acc
+					}, [])
+			},
+			convertPoints(primary) {
+				return Object.entries(primary)
 					.map(curr => {
 						const [point, value] = curr;
 
 						return { [point]: value.split(';').map(pt => +pt) }
 					})
 			},
-			getMaxCoord() {
-				const deployedCoords = this.convertCoords.map(curr => Object.values(curr).flat()).flat()
-				return Math.max(...deployedCoords)
-			},
-			scalableCoords() {
-				return this.convertCoords.map(curr => {
-					const [point, value] = Object.entries(curr).flat()
-
-					return this.convertCoords.length > 1
-						? { [point]: value.map(c => c * 500 / this.getMaxCoord) }
-						: { [point]: value.map(c => c) }
-				})
-			},
-			points() {
-				return this.scalableCoords.reduce((acc, curr, i) => {
-					const [point, [x, y]] = Object.entries(curr).flat()
-					acc[point] = { x, y }
-
-					return acc
-				}, {})
-			},
-			segments() {
-				return this.getSegments(this.points)
-			},
 		},
-		methods: {
-			getSegments(points) {
-				const res = {}
-
-				for (let i = 0; i < Object.keys(points).length; i++) {
-					const [point] = Object.entries(points)[i]
-					const [[, points1], p2] = Object.entries(points).slice(i, i + 2)
-
-					res[point] = [points1, p2 === undefined ? points1 : p2[1]]
-				}
-
-				return res
-			},
-			checkIntersecting(segments) {
-				const restValues = point => Object.entries(segments).filter(curr => +curr[0] !== +point)
-
-				return Object.entries(segments).every(curr => {
-					const [point, segment] = curr
-					const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = segment
-
-					return restValues(+point).some(c => {
-						const [, [{ x: x3, y: y3 }, { x: x4, y: y4 }]] = c,
-							v1 = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3),
-							v2 = (x4 - x3) * (y2 - y3) - (y4 - y3) * (x2 - x3),
-							v3 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1),
-							v4 = (x2 - x1) * (y4 - y1) - (y2 - y1) * (x4 - x1)
-
-						return (v1 * v2 < 0) && (v3 * v4 < 0);
-					})
-				})
-			},
-			createDisjoint() {
-				const disjointPoints = Object
-					.entries(this.convertCoords)
-					.map((curr, i) => {
-						const [, { [i + 1]: points }] = curr
-
-						return points
-					})
-					.sort(([x1, y1], [x2, y2]) => x1 - x2 || y1 - y2)
-
-				const formatDisjointTotalResult = disjointPoints.reduce((acc, curr, i) => {
-					const [x, y] = curr
-					acc[i + 1] = `${x};${y}`
-
-					return acc
-				}, {})
-
-				const formatDisjointPoints = disjointPoints.reduce((acc, curr, i) => {
-					const [x, y] = curr
-					acc[i + 1] = { x, y }
-
-					return acc
-				}, {})
-
-				return !this.checkIntersecting(this.getSegments(formatDisjointPoints))
-					? this.primaryCoords = formatDisjointTotalResult
-					: this.createDisjoint()
-			},
+		created() {
+			setTimeout(() => {
+				this.coords = this.convertPoints(require('./api/data.json'))
+			}, 500)
+		},
+		mounted() {
+			this.scale = document.body.offsetHeight - 200
 		}
 	}
 </script>
@@ -158,16 +129,14 @@
 		box-sizing: border-box;
 	}
 
-	html {
-		font-size: 62.5%;
-	}
-
 	html,
 	body {
+		font-size: 62.5%;
 		font-family: 'Ubuntu', sans-serif;
 	}
 
 	body {
+		width: 100%;
 		font-size: 1.6rem;
 		font-weight: 100;
 	}
@@ -176,18 +145,32 @@
 		width: 100%;
 		height: 100vh;
 		display: flex;
-		align-items: center;
 
 		&__chart {
-			margin: auto;
+			margin: auto 0;
+		}
+		&__interface {
+			margin: auto 10rem;
 		}
 	}
 
 	.chart {
-		width: 650px;
-		height: 650px;
-		border-left: 1px solid #000;
-		border-bottom: 1px solid #000;
 		position: relative;
+
+		&::before, &::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			background: #999;
+		}
+		&::before {
+			height: 100%;
+			width: 1px;
+		} 
+		&::after {
+			width: 100%;
+			height: 1px;
+		} 
 	}
 </style>

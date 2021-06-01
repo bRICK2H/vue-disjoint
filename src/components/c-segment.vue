@@ -11,17 +11,23 @@ export default {
 		segment: {
 			type: Array,
 			default: () => ([])
+		},
+		max: {
+			type: Number,
+			default: 0
+		},
+		scale: {
+			type: Number,
+			default: 0
 		}
 	},
 	data: () => ({}),
 	computed: {
 		draw() {
-			const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = this.segment
-			const deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
-			// const sin = +Math.sin(deg * Math.PI / 180).toFixed(2)
-			const isNegative = /-/.test(String(deg))
-
 			let rx1, rx2, ry1, ry2 = 0
+			const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = this.segment,
+					deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0),
+					isNegative = /-/.test(String(deg))
 
 			if (deg) {
 				rx1 = x1 - 1
@@ -59,15 +65,20 @@ export default {
 
 			return {
 				clipPath: `polygon(
-					calc(${x1}px) calc(${y1}px),
-					calc(${rx1}px) calc(${ry1}px),
-					calc(${rx2}px) calc(${ry2}px),
-					calc(${x2}px) calc(${y2}px)
+					calc(${this.scalable(x1)}px) calc(${this.scalable(y1)}px),
+					calc(${this.scalable(rx1)}px) calc(${this.scalable(ry1)}px),
+					calc(${this.scalable(rx2)}px) calc(${this.scalable(ry2)}px),
+					calc(${this.scalable(x2)}px) calc(${this.scalable(y2)}px)
 				)`,
 				backgroundColor: 'green'
 			}
 		},
-	}
+	},
+	methods: {
+		scalable(point) {
+			return (point * this.scale) / this.max
+		}
+	},
 }
 </script>
 
@@ -81,5 +92,6 @@ export default {
 		width: 100%;
 		height: 100%;
 		display: inline-block;
+		transition: .5s;
 	}
 </style>
