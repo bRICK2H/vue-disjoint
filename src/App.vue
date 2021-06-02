@@ -153,19 +153,20 @@
 			margin: auto 0;
 		}
 		&__interface {
-			margin: auto 10rem;
+			margin: 0 10rem;
 		}
 	}
 
 	.chart {
 		position: relative;
+		background: linear-gradient(45deg, #e2e2e2, transparent);
 
 		&::before, &::after {
 			content: '';
 			position: absolute;
 			bottom: 0;
 			left: 0;
-			background: #999;
+			background: #777;
 		}
 		&::before {
 			height: 100%;

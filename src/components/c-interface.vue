@@ -1,63 +1,96 @@
 <template>
 	<div class="interface container__interface">
-		<button v-if="!isCoords"
-			@click="addCoords"
-		>Задать входные данные</button>
-		<button v-if="isCoords"
-			@click="deleteField"
+
+		<c-warning
+			:isError="isDoubleCoords || isLimitValue"
+			@close-warning="closeWarinig"
 		>
-			Удалить все
-		</button>
-
-			<div class="container-points">
-				<transition-group name="points" tag="div">
-					<div class="list-points" 
-						v-for="(points, key) of coords"
-						:key="`point-${key}`"
-						@input="inputValue($event, key)"
-						@click="updatePrevValue($event.target.value)"
-					>
-						<span>{{ key }}</span>
-						<div class="item-point">
-							<span>x:</span>
-							<input class="input-point item-point__input-point"
-								:class="{ 'input-point--double': isDoubleCoords && doubleCoords.includes(key) || isLimitValue && limitKeyPoint === key && limitTypePoint === 'x' }"
-								type="text"
-								:value="points.x"
-								data-type="x"
-							>
-							<span>y:</span>
-							<input class="input-point item-point__input-point"
-								:class="{ 'input-point--double': isDoubleCoords && doubleCoords.includes(key) || isLimitValue && limitKeyPoint === key && limitTypePoint === 'y' }"
-								type="text"
-								:value="points.y"
-								data-type="y"
-							>
-							<button class="btn-clear input-point__btn-clear" @click="deteleValue(key)"></button>
-						</div>
-					</div>
-				</transition-group>
-			</div>
-
-		<!-- <template v-if="isCoords"> -->
-			<div class="container-buttons">
+			{{ warning }}
+		</c-warning>
+		
+		<div class="container-buttons">
+			<transition name="btn">
+				<button v-if="!isCoords"
+					class="btn btn--entry container-buttons__btn"
+					@click="addCoords"
+				>
+					Входные данные
+				</button>
+			</transition>
+			<transition name="btn">
 				<button v-if="isCoords"
+					@click="deleteField"
+					class="btn btn--all-del container-buttons__btn"
+				>
+					Удалить все
+				</button>
+			</transition>
+		</div>
+
+		<div class="container-points">
+			<transition-group name="points" tag="div">
+				<div class="list-points" 
+					v-for="(points, key) of coords"
+					:key="`point-${key}`"
+					@input="inputValue($event, key)"
+					@click="updatePrevValue($event)"
+				>
+					<span class="item-key-point container-points__item-key-point">{{ key }}</span>
+					<div class="item-point">
+						<span class="type-point item-point__type-point">x:</span>
+						<input class="input-point item-point__input-point"
+							:class="{ 'input-point--double': isDoubleCoords && doubleCoords.includes(key) || isLimitValue && limitKeyPoint === key && limitTypePoint === 'x' }"
+							type="text"
+							:value="points.x"
+							data-type="x"
+						>
+						<span class="type-point item-point__type-point">y:</span>
+						<input class="input-point item-point__input-point"
+							:class="{ 'input-point--double': isDoubleCoords && doubleCoords.includes(key) || isLimitValue && limitKeyPoint === key && limitTypePoint === 'y' }"
+							type="text"
+							:value="points.y"
+							data-type="y"
+						>
+						<button class="btn-clear input-point__btn-clear"
+							@click="deteleValue(key)"
+							title="Удалить"
+						></button>
+					</div>
+				</div>
+			</transition-group>
+		</div>
+
+		<transition name="btn">
+			<div class="container-buttons"
+				v-if="isCoords"
+			>
+				<button class="btn btn--add container-buttons__btn"
 					@click="addCoords"
 				>
 					Добавить точку
 				</button>
-				<button @click="updateValue">
-					Обработать
-				</button>
+				<transition name="btn">
+					<button v-if="isCoords > 1"
+						class="btn btn--process container-buttons__btn"
+						@click="updateValue"
+					>
+						Обработать
+					</button>
+				</transition>
 			</div>
-		<!-- </template> -->
+		</transition>
 
 	</div>
 </template>
 
 <script>
+import cWarning from './c-warning'
+
 export default {
 	name: 'cInterface',
+	components: {
+		cWarning
+	},
 	props: {
 		points: {
 			type: Array,
@@ -71,11 +104,12 @@ export default {
 		isDoubleCoords: false,
 		isLimitValue: false,
 		limitTypePoint: '',
-		limitValue: 0
+		limitValue: 0,
+		warning: 'Ошибка'
 	}),
 	computed: {
 		isCoords() {
-			return !!Object.keys(this.coords).length
+			return Object.keys(this.coords).length
 		}
 	},
 	methods: {
@@ -93,20 +127,16 @@ export default {
 				this.isLimitValue = true
 				this.limitKeyPoint = keyPoint
 				this.limitTypePoint = type
-
-				setTimeout(() => {
-					this.limitValue = 0
-					this.isLimitValue = false
-					this.limitTypePoint = ''
-				}, 300)
 				
 				return
 			}
 			target.value = this.prevValue = target.value.replace(/[^\d]/, '')
 			this.$set(this.coords[keyPoint], type, +target.value)
 		},
-		updatePrevValue(value) {
-			this.prevValue = value
+		updatePrevValue(e) {
+			const { target } = e
+			
+			this.prevValue = target.value
 		},
 		updateValue() {
 			const coords = Object.entries(this.coords)
@@ -122,16 +152,11 @@ export default {
 				})
 
 			if (doubleCoords.length) {
+				this.isDoubleCoords = true
 				this.doubleCoords = doubleCoords.map(curr => {
 					const [keyPoint] = curr
 					return keyPoint
 				})
-
-				this.isDoubleCoords = true
-				setTimeout(() => {
-					this.doubleCoords = []
-					this.isDoubleCoords = false
-				}, 300)
 
 				return false
 			}
@@ -154,6 +179,9 @@ export default {
 
 				return acc
 			}, [])
+		},
+		closeWarinig() {
+			this.isDoubleCoords = this.isLimitValue = false
 		}
 	},
 	watch: {
@@ -167,6 +195,12 @@ export default {
 					return acc
 				}, {})
 			}
+		},
+		isDoubleCoords() {
+			this.warning = `Координаты ${this.doubleCoords.join(', ')} дублируются!`
+		},
+		isLimitValue(val) {
+			console.log('isLimit', val, this.limitTypePoint)
 		}
 	}
 }
@@ -176,18 +210,38 @@ export default {
 	.interface {
 		width: 30rem;
 		height: 100%;
-		border: 1px solid red;
 	}
-
 	.container-points {
-		max-height: calc(100% - 10rem);
+		max-height: calc(100% - 12rem);
 		overflow-y: auto;
-	}
 
+		&__item-key-point {
+			margin-right: 1rem;
+		}
+	}
+	.list-points {
+		position: relative;
+
+		&::after {
+			content: '';
+			width: 100%;
+			height: .1rem;
+			background-color: #aaa;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+		}
+	}
 	.list-points,
 	.item-point {
 		display: flex;
 		align-items: center;
+	}
+	.item-key-point {
+		min-width: 3rem;
+		font-size: 1.7rem;
+		font-weight: 400;
+		text-align: right;
 	}
 	.item-point {
 		justify-content: center;
@@ -195,8 +249,10 @@ export default {
 		&__input-point {
 			margin: .5rem;
 		}
+		&__type-point {
+			margin: 1rem;
+		}
 	}
-
 	.input-point {
 		width: 100%;
 		text-align: center;
@@ -217,14 +273,18 @@ export default {
 			}
 		}
 	}
-
+	.type-point {
+		font-size: 1.7rem;
+		font-weight: 400;
+	}
 	.btn-clear {
-		// width: 50px;
-		height: 25px;
-		flex: 1 0 25px;
+		height: 22px;
+		flex: 1 0 22px;
+		margin: 0 1rem;
 		border: none;
+		outline: none;
 		border-radius: 50%;
-		background-image: url('../assets/img/svg/del-all.svg');
+		background-image: url('../assets/img/svg/del.svg');
 		background-color: #fff;
 		background-size: cover;
 		background-repeat: no-repeat;
@@ -236,10 +296,86 @@ export default {
 		}
 	}
 
+	.container-buttons {
+		display: flex;
+		justify-content: center;
+
+		&__btn {
+			flex: 0 1 50%;
+			margin: 1rem .5rem;
+		}
+	}
+
+	.btn {
+		font-size: 1.6rem;
+		padding: 1rem 0;
+		border: none;
+		outline: none;
+		border-radius: .3rem;
+		user-select: none;
+		color: #fff;
+		cursor: pointer;
+		transition: .2s;
+
+		&--all-del {
+			margin-left: auto;
+			background-color: #dc3545;
+
+			&:hover {
+				background-color: rgba(220, 53, 70, .8);
+			}
+		}
+		&--all-del,
+		&--entry {
+			flex: 0 1 calc(50% - 1rem)
+		}
+		&--entry {
+			margin-right: auto;
+		}
+		&--entry,
+		&--add {
+			background-color: #28a745;
+
+			&:hover {
+				background-color: rgba(40, 167, 70, .8);
+			}
+		}
+		&--process {
+			background-color: #007bff;
+
+			&:hover {
+				background-color: rgba(0, 123, 255, .8);
+			}
+		}
+
+		&:active {
+			transform: scale(.95);
+			box-shadow: 0 .2rem .6rem #222;
+		}
+	}
+
 	.points-leave-active {
-		animation: leave-points .5s;
-		@keyframes leave-points {
+		animation: leave-point .5s;
+		@keyframes leave-point {
 			100% { opacity: 0; transform: translate(-100%)}
+		}
+	}
+	.points-enter-active {
+		animation: enter-point .5s;
+		@keyframes enter-point {
+			0% { opacity: 0; transform: translate(-100%)}
+		}
+	}
+	.btn-leave-active {
+		animation: leave-btn .5s;
+		@keyframes leave-btn {
+			100% { transform: perspective(300px) rotateX(90deg) }
+		}
+	}
+	.btn-enter-active {
+		animation: enter-btn .5s;
+		@keyframes enter-btn {
+			0% { transform: perspective(300px) rotateX(90deg) }
 		}
 	}
 </style>
