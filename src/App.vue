@@ -67,19 +67,22 @@
 				}, [])
 			},
 			segments() {
-				return this.coords.reduce((acc, curr, i) => {
+				if (this.coords.length < 2) return
+
+				const amountSegments = this.coords.length > 2 ? this.coords.length - 1 : 1
+				const collectionSegments = []
+				for (let i = 0; i < amountSegments; i++) {
 					const segments = this.coords.slice(i, i + 2)
-					const modified = segments.map(curr => {
+					const m_segments = segments.map(curr => {
 						const [x, y] = Object.values(curr).flat()
 						return { x, y }
 					})
-					const [p1, p2] = modified
+					const [p1, p2] = m_segments
 
-					if (!acc.length) acc = []
-					acc.push(p2 === undefined ? [p1, p1] : modified)
+					collectionSegments.push(p2 === undefined ? [p1, p1] : m_segments)
+				}
 
-					return acc
-				}, [])
+				return collectionSegments
 			},
 		},
 		methods: {

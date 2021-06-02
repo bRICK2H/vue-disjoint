@@ -58,6 +58,8 @@ export default {
 	}
 	.point {
 		transition: .5s;
-		font-size: 1.8rem
+		font-size: 1.8rem;
+		font-weight: 400;
+		white-space: pre;
 	}
 </style>

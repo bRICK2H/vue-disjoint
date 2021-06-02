@@ -24,41 +24,33 @@ export default {
 	data: () => ({}),
 	computed: {
 		draw() {
-			console.log(this.segment)
-			// let rx1, rx2, ry1, ry2 = 0
-			let rx1 = 0,
-			    rx2 = 0,
-				 ry1 = 0,
-				 ry2 = 0
+			let thickness = 0.0015 * this.max
+			let rx1 = 0, rx2 = 0, ry1 = 0, ry2 = 0
 			const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = this.segment,
-					deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0),
-					sin = +Math.sin(deg * Math.PI / 180).toFixed(2),
-					isNegative = /-/.test(String(deg))
-
-			console.log(rx1, ry1, rx2, ry2)
+					deg = +(180 / Math.PI * Math.atan2(y2 - y1, x2 - x1)).toFixed(0)
 
 			if (deg) {
-				rx1 = x1 - 1
-				rx2 = x2 - 1
+				rx1 = x1 - thickness
+				rx2 = x2 - thickness
 
-				if (isNegative) {
+				if (/-/.test(String(deg))) {
 					if (deg < -90) {
-						ry1 = y1 + 1
-						ry2 = y2 + 1
+						ry1 = y1 + thickness
+						ry2 = y2 + thickness
 					} else if (deg > -90) {
-						ry1 = y1 - 1
-						ry2 = y2 - 1
+						ry1 = y1 - thickness
+						ry2 = y2 - thickness
 					} else {
 						ry1 = y1
 						ry2 = y2
 					}
 				} else {
 					if (deg < 90) {
-						ry1 = y1 + 1
-						ry2 = y2 + 1
+						ry1 = y1 + thickness
+						ry2 = y2 + thickness
 					} else if (deg > 90) {
-						ry1 = y1 - 1
-						ry2 = y2 - 1
+						ry1 = y1 - thickness
+						ry2 = y2 - thickness
 					} else {
 						ry1 = y1
 						ry2 = y2
@@ -67,8 +59,8 @@ export default {
 			} else {
 				rx1 = x1
 				rx2 = x2
-				ry1 = y1 + 1
-				ry2 = y2 + 1
+				ry1 = y1 + thickness
+				ry2 = y2 + thickness
 			}
 
 			return {
