@@ -32,6 +32,7 @@
 </template>
 
 <script>
+	import data from './api/data.json'
 	import cPoint from '@/components/c-point'
 	import cSegment from '@/components/c-segment'
 	import cInterface from '@/components/c-interface'
@@ -114,7 +115,7 @@
 		},
 		created() {
 			setTimeout(() => {
-				this.coords = this.convertPoints(require('./api/data.json'))
+				this.coords = this.convertPoints(data)
 			}, 500)
 		},
 		mounted() {
