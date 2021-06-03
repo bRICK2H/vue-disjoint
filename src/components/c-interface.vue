@@ -208,8 +208,12 @@ export default {
 
 <style lang="scss">
 	.interface {
-		width: 30rem;
+		flex: 0 1 30rem;
+    	min-width: 30rem;
 		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center
 	}
 	.container-points {
 		max-height: calc(100% - 12rem);

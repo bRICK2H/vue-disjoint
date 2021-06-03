@@ -32,7 +32,6 @@
 </template>
 
 <script>
-	import data from './api/data.json'
 	import cPoint from '@/components/c-point'
 	import cSegment from '@/components/c-segment'
 	import cInterface from '@/components/c-interface'
@@ -115,7 +114,7 @@
 		},
 		created() {
 			setTimeout(() => {
-				this.coords = this.convertPoints(data)
+				this.coords = this.convertPoints(require('./api/data.json'))
 			}, 500)
 		},
 		mounted() {
@@ -160,7 +159,7 @@
 
 	.chart {
 		position: relative;
-		background: linear-gradient(45deg, #e2e2e2, transparent);
+		background: linear-gradient(45deg, #eeeeee93, transparent);
 
 		&::before, &::after {
 			content: '';
