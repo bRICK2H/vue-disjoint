@@ -105,7 +105,7 @@ export default {
 		isLimitValue: false,
 		limitTypePoint: '',
 		limitValue: 0,
-		warning: 'Ошибка'
+		warning: ''
 	}),
 	computed: {
 		isCoords() {
@@ -199,8 +199,8 @@ export default {
 		isDoubleCoords() {
 			this.warning = `Координаты ${this.doubleCoords.join(', ')} дублируются!`
 		},
-		isLimitValue(val) {
-			console.log('isLimit', val, this.limitTypePoint)
+		isLimitValue() {
+			this.warning = `Установлен лимит - 3 символа!`
 		}
 	}
 }
